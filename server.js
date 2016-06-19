@@ -60,6 +60,14 @@ net.createServer(function(sock) {
 
   function parseBuffer(buffer) {
 
+    // ofs|size|description
+    // ---|----|-----------
+    // 0  |1   |b1, command
+    // 1  |1   |b2
+    // 2  |1   |b3
+    // 3  |1   |b4
+    // 4  |4   |i1, timestamp (little endian)
+
     // console.log(buffer)
 
     switch(COMMANDS[buffer[0]]) {
@@ -75,39 +83,52 @@ net.createServer(function(sock) {
         break;
       case 'JOYPAD':
         // ignore
-        console.log("JOYPAD: ignore".red)
+        // console.log("JOYPAD: ignore".red)
         break;
       case 'SYNC_AS_MASTER': // 0x68, expects 0x69 response
-        console.log(buffer)
-        // if (buffer == new Buffer([0x69, 0x50, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00])) {
-        //   console.log('111')
-        //   send(new Buffer([0x69, 0x50, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00]), 'RESPOND TO MESSAGE 1', true)
-        // } else {
-        //   console.log('222')
-        //   send(new Buffer([0x69, 0x00, 0x80, 0x01, 0x00, 0x00, 0x00, 0x00]), 'RESPOND TO MESSAGE 2', true)
-        // }
-        send(buffer, 'PASS ON 0x68 MESSAGE')
+
+        // Send a byte as master. The control value is mostly the SC register, except the addition of the double speed bit.
+        // b2=data value.
+        // b3=control value.
+        //   bit 0: 1
+        //   bit 1: high speed
+        //   bit 2: double speed
+        //   bit 3-6: 0
+        //   bit 7: 1
+        // b4=0
+        // i1=timestamp
+
+        var dataValue = buffer[1];
+        var time1 = buffer[4];
+        var time2 = buffer[5];
+        var time3 = buffer[6];
+        var time4 = buffer[7];
+        var controlValue = 0x81;
+
+        var buffer2 = new Buffer([0x68, dataValue, controlValue, 0x00, time1, time2, time3, time4]);
+        send(buffer2, "Passing on modified 0x68");
+        // send(buffer, 'PASS ON 0x68 MESSAGE')
         break;
       case 'SYNC_AS_SLAVE': // 0x69
-        send(buffer, 'PASS ON 69 MESSAGE')
 
-        // 69 50 80 00 00 00 00 00
-        // 69 50 80 00 00 00 00 00
-
-        // 68 a0 81 00 06 b3 7b 06
-        // 69 50 80 01 00 00 00 00
-
-        // b1=0x69
+        // Send a byte as slave. This command is sent in response to receiving a SYNC_AS_MASTER.
         // b2=data value
         // b3=control value, $80
         // b4=0
         // i1=0
 
-        // var dataValue = buffer[1]
-        // var controlValue = buffer[3]
+        // 69 50 80 00   00 00 00 00
+        // 69 50 80 00   00 00 00 00
 
-        // send(new Buffer(0x69, dataValue, 0x80, controlValue, 0x00, 0x00, 0x00, 0x00), "Passing on modified 0x69")
+        // 68 a0 81 00   06 b3 7b 06
+        // 69 50 80 01   00 00 00 00
 
+        var dataValue = buffer[1];
+        var controlValue = buffer[3];
+        var buffer2 = new Buffer([0x69, dataValue, 0x80, controlValue, 0x00, 0x00, 0x00, 0x00]);
+
+        send(buffer2, "Passing on modified 0x69");
+        // send(buffer, 'PASS ON 69 MESSAGE')
         break;
       case 'WANT_DISCONNECT':
         break;
