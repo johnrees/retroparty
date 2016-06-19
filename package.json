@@ -1,0 +1,15 @@
+{
+  "name": "retroparty",
+  "version": "0.0.1",
+  "description": "connect old consoles via bluetooth",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "binary": "^0.3.0",
+    "colors": "^1.1.2"
+  }
+}
