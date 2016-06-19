@@ -4,7 +4,8 @@
   "description": "connect old consoles via bluetooth",
   "main": "index.js",
   "scripts": {
-    "dev": "babel-node server.js"
+    "dev": "babel-node server.js",
+    "proxy": "node proxy.js"
   },
   "author": "",
   "license": "ISC",
