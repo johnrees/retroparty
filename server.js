@@ -47,13 +47,12 @@ net.createServer(function(sock) {
       sock.write(buffer);
     } else if (clients.length == 2) {
       if (index == 0) {
-        console.log('a')
+        // console.log('a')
         clients[1].write(buffer);
       } else {
-        console.log('b')
+        // console.log('b')
         clients[0].write(buffer);
       }
-      console.log(index)
     }
     // sock.write(buffer);
     if (debug) { console.log(debug.green) }
@@ -61,30 +60,60 @@ net.createServer(function(sock) {
 
   function parseBuffer(buffer) {
 
-    console.log(buffer)
+    // console.log(buffer)
 
     switch(COMMANDS[buffer[0]]) {
       case 'PROTOCOL_VERSION':
         send(new Buffer([0x01, 0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00]), 'HANDSHAKE: version check', true)
         break;
       case 'SYNC3':
-        // send(buffer, 'SYNC3', true)
+        send(buffer)
         break;
       case 'STATUS':
-        send(buffer, 'HANDSHAKE: timing', true)
-        break
+        // send(buffer, 'HANDSHAKE: timing', true)
+        send(new Buffer([0x6C, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]), 'HANDSHAKE: version check', true)
+        break;
       case 'JOYPAD':
-      case 'SYNC_AS_MASTER':
-      case 'SYNC_AS_SLAVE':
+        // ignore
+        console.log("JOYPAD: ignore".red)
+        break;
+      case 'SYNC_AS_MASTER': // 0x68, expects 0x69 response
+        console.log(buffer)
+        // if (buffer == new Buffer([0x69, 0x50, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00])) {
+        //   console.log('111')
+        //   send(new Buffer([0x69, 0x50, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00]), 'RESPOND TO MESSAGE 1', true)
+        // } else {
+        //   console.log('222')
+        //   send(new Buffer([0x69, 0x00, 0x80, 0x01, 0x00, 0x00, 0x00, 0x00]), 'RESPOND TO MESSAGE 2', true)
+        // }
+        send(buffer, 'PASS ON 0x68 MESSAGE')
+        break;
+      case 'SYNC_AS_SLAVE': // 0x69
+        send(buffer, 'PASS ON 69 MESSAGE')
+
+        // 69 50 80 00 00 00 00 00
+        // 69 50 80 00 00 00 00 00
+
+        // 68 a0 81 00 06 b3 7b 06
+        // 69 50 80 01 00 00 00 00
+
+        // b1=0x69
+        // b2=data value
+        // b3=control value, $80
+        // b4=0
+        // i1=0
+
+        // var dataValue = buffer[1]
+        // var controlValue = buffer[3]
+
+        // send(new Buffer(0x69, dataValue, 0x80, controlValue, 0x00, 0x00, 0x00, 0x00), "Passing on modified 0x69")
+
+        break;
       case 'WANT_DISCONNECT':
         break;
       default:
-        send(data)
-        console.log("unknown data!".red)
+        send(buffer, 'UNKNOWN DATA')
     }
-    // // <Buffer 68 a0 81 00 42 f3 f6 6a> # received when multiplayer
-    // // <Buffer 68 a0 81 00 c6 73 90 79
   }
-
 
 }).listen(PORT, HOST);

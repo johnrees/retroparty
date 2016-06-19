@@ -1,6 +1,15 @@
 'use strict';
 
 var net = require('net');
+var winston = require("winston");
+
+var logger = new(winston.Logger)({
+    transports: [
+        new(winston.transports.Console)(),
+        new(winston.transports.File)({filename: 'logs.log'})
+    ]
+});
+
 
 var proxyPort = 4000;
 var tcpServerPort = 8765;
@@ -19,14 +28,20 @@ proxy.on('connection', function(sock) {
   });
 
   client.on('data', function(data) {
-    console.log("LEFT★ > RIGHT")
-    console.log(data)
+    if (data[0] == 0x68 || data[0] == 0x69) {
+      console.log("LEFT★ > RIGHT")
+      console.log(data)
+    }
+    logger.log('info', data, { from: 'master' });
     sock.write(data);
   });
 
   sock.on('data', function(data) {
-    console.log("RIGHT > LEFT★")
-    console.log(data)
+    if (data[0] == 0x68 || data[0] == 0x69) {
+      console.log("RIGHT > LEFT★")
+      console.log(data)
+    }
+    logger.log('info', data, { from: 'slave' });
     client.write(data);
   });
 
