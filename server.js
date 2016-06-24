@@ -4,6 +4,15 @@ import net from "net";
 import binary from "binary";
 import colors from "colors";
 
+// http://bgb.bircd.org/bgblink.html
+
+// 1000000 microseconds in a second
+// 1000 milliseconds in a second
+// 2000000 CPU cycles per second
+
+// new Date().getTime(); <- milliseconds
+// multiply time in seconds by 2^21
+
 const HOST = "127.0.0.1",
   PORT = 8765;
 
@@ -23,6 +32,9 @@ var clients = [],
 net.createServer(function(sock) {
   clients.push(sock);
   var index = _index++;
+  var epoch = new Date().getTime();
+
+  console.log(epoch);
 
   console.log(('CONNECTED: ' + sock.remoteAddress +':'+ sock.remotePort).rainbow);
 
